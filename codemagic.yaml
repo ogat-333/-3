@@ -1,0 +1,31 @@
+workflows:
+  android-release:
+    name: Gerbarij Bezymyannogo - Android Release
+
+    environment:
+      java: 17
+
+    scripts:
+      - name: Unpack Android project
+        script: |
+          rm -rf buildsrc
+          mkdir buildsrc
+          unzip -q *.zip -d buildsrc
+
+      - name: Install Gradle
+        script: |
+          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle.zip
+          export GRADLE_HOME="$PWD/gradle-8.7"
+          export PATH="$GRADLE_HOME/bin:$PATH"
+          gradle --version
+
+      - name: Build APK
+        script: |
+          PROJECT_DIR="$(dirname "$(find buildsrc -name settings.gradle -type f -print -quit)")"
+          cd "$PROJECT_DIR"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          "$PWD/../../gradle-8.7/bin/gradle" assembleRelease
+
+    artifacts:
+      - buildsrc/**/app/build/outputs/apk/release/*.apk
